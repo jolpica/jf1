@@ -26,6 +26,9 @@ to quickly create a Cobra application.`,
 		Args: cobra.MaximumNArgs(1),
 	}
 
+	cmd.Flags().StringP("base-url", "u", "https://api.jolpi.ca", "base url for jolpica-f1 api requests")
+	viper.BindPFlag("upload.base-url", cmd.Flags().Lookup("base-url"))
+
 	cmd.Flags().Bool("dry-run", false, "run command in dry-run mode")
 	viper.BindPFlag("upload.dry-run", cmd.Flags().Lookup("dry-run"))
 
@@ -42,7 +45,7 @@ func runUploadCmd(cmd *cobra.Command, args []string) error {
 		dirsPath = args[0]
 	}
 	fmt.Printf("Scanning Dir: %v\n", dirsPath)
-	err := uploader.RunUploader(dirsPath, viper.GetString("upload.scanned-file"), viper.GetBool("upload.dry-run"))
+	err := uploader.RunUploader(dirsPath, viper.GetString("upload.scanned-file"), viper.GetString("upload.base-url"), viper.GetBool("upload.dry-run"))
 
 	fmt.Printf("End of program. err: %v\nTook: %v\n", err, time.Since(start))
 	return err

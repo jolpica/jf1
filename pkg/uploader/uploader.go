@@ -6,7 +6,7 @@ import (
 	"maps"
 )
 
-func RunUploader(dirsPath string, hashFileName string, dryRun bool) error {
+func RunUploader(dirsPath string, hashFileName string, baseUrl string, dryRun bool) error {
 	done := make(chan struct{})
 
 	knownHashes := readKnownHashesFromFile(hashFileName)
@@ -17,7 +17,7 @@ func RunUploader(dirsPath string, hashFileName string, dryRun bool) error {
 
 	dirLoadResultc := loadDataFromDirectories(done, updatedDirsc)
 
-	requestResultc := sendDataLoadRequests(done, dirLoadResultc, dryRun)
+	requestResultc := sendDataLoadRequests(done, dirLoadResultc, baseUrl, dryRun)
 
 	if err := saveAndDisplayResults(requestResultc, knownHashes, hashFileName, dryRun); err != nil {
 		return err

@@ -19,7 +19,7 @@ type RequestResult struct {
 	Err error
 }
 
-func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryLoadResult, dryRun bool) <-chan RequestResult {
+func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryLoadResult, baseUrl string, dryRun bool) <-chan RequestResult {
 	requestResultc := make(chan RequestResult, 5)
 	client := &http.Client{}
 
@@ -40,7 +40,7 @@ func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryL
 					}
 					return
 				}
-				makeDataLoadRequest(done, requestResultc, reqSem, client, result.Result, dryRun)
+				makeDataLoadRequest(done, requestResultc, reqSem, client, result.Result, baseUrl, dryRun)
 				// TODO: if !dryRun, do a dryRun followed by live run
 			}(result)
 		}
@@ -69,7 +69,7 @@ type JolpicaUploadResponsePerModelPayload struct {
 	Updated      []int `json:"updated"`
 }
 
-func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, dryRun bool) {
+func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, baseUrl string, dryRun bool) {
 	var requestResult RequestResult
 	defer func() {
 		select {
@@ -84,7 +84,7 @@ func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult
 		Data:        processedDir.Data,
 	}
 
-	request, err := createJolpicaHttpRequest(payload)
+	request, err := createJolpicaHttpRequest(payload, baseUrl)
 	if err != nil {
 		requestResult = RequestResult{Err: fmt.Errorf("error generating request (%s): %v", processedDir.Description(), err)}
 		return
@@ -120,8 +120,8 @@ func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult
 	}
 }
 
-func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload) (*http.Request, error) {
-	url := "http://localhost:8000/data/import/"
+func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload, baseUrl string) (*http.Request, error) {
+	url := baseUrl + "/data/import/"
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {

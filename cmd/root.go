@@ -94,6 +94,7 @@ type Jf1Input struct {
 }
 
 type UploadInput struct {
+	BaseUrl     string `mapstructure:"base-url"`
 	DryRun      bool   `mapstructure:"dry-run"`
 	ScannedFile string `mapstructure:"scanned-file"`
 }
