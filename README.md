@@ -1,1 +1,1 @@
-# jolpica-f1-cli
+# jolpica-f1 go module
