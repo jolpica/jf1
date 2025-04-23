@@ -27,19 +27,20 @@ func readKnownHashesFromFile(fileName string) (knownHashes map[string][md5.Size]
 
 	return knownHashes
 }
-func writeKnownHashesToFile(fileName string, knownHashes map[string][md5.Size]byte) {
-	file, err := os.Create("test.gob")
+func writeKnownHashesToFile(fileName string, knownHashes map[string][md5.Size]byte) error {
+	file, err := os.Create(fileName)
 	if err != nil {
-		log.Fatalf("Failure encoding gob: %v", err)
+		return fmt.Errorf("failure encoding gob: %v", err)
 	}
 	defer file.Close()
 
 	encoder := gob.NewEncoder(file)
 	if err := encoder.Encode(knownHashes); err != nil {
-		log.Fatalf("failure encoding gob: %v", err)
+		return fmt.Errorf("failure encoding gob: %v", err)
 	}
 
 	if err := file.Close(); err != nil {
-		log.Printf("warning failed to close file: %v", err)
+		return fmt.Errorf("failure to close file: %v", err)
 	}
+	return nil
 }

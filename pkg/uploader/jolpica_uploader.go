@@ -7,9 +7,13 @@ import (
 	"io"
 	"net/http"
 	"sync"
-
-	"github.com/jolpica/jf1/cmd/input"
 )
+
+type RequestConfig struct {
+	BaseUrl string
+	Token   string
+	DryRun  bool
+}
 
 type RequestResult struct {
 	StatusCode   int
@@ -20,7 +24,7 @@ type RequestResult struct {
 	Err error
 }
 
-func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryLoadResult, baseUrl string, dryRun bool) <-chan RequestResult {
+func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryLoadResult, requestConfig RequestConfig) <-chan RequestResult {
 	requestResultc := make(chan RequestResult, 5)
 	client := &http.Client{}
 
@@ -41,7 +45,7 @@ func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryL
 					}
 					return
 				}
-				makeDataLoadRequest(done, requestResultc, reqSem, client, result.Result, baseUrl, dryRun)
+				makeDataLoadRequest(done, requestResultc, reqSem, client, result.Result, requestConfig)
 				// TODO: if !dryRun, do a dryRun followed by live run
 			}(result)
 		}
@@ -70,7 +74,7 @@ type JolpicaUploadResponsePerModelPayload struct {
 	Updated      []int `json:"updated"`
 }
 
-func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, baseUrl string, dryRun bool) {
+func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, requestConfig RequestConfig) {
 	var requestResult RequestResult
 	defer func() {
 		select {
@@ -80,12 +84,12 @@ func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult
 	}()
 
 	payload := JolpicaUploadRequestPayload{
-		DryRun:      dryRun,
+		DryRun:      requestConfig.DryRun,
 		Description: processedDir.Description(),
 		Data:        processedDir.Data,
 	}
 
-	request, err := createJolpicaHttpRequest(payload, baseUrl)
+	request, err := createJolpicaHttpRequest(payload, requestConfig)
 	if err != nil {
 		requestResult = RequestResult{Err: fmt.Errorf("error generating request (%s): %v", processedDir.Description(), err)}
 		return
@@ -121,8 +125,8 @@ func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult
 	}
 }
 
-func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload, baseUrl string) (*http.Request, error) {
-	url := baseUrl + "/data/import/"
+func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload, requestConfig RequestConfig) (*http.Request, error) {
+	url := fmt.Sprintf("%s/data/import/", requestConfig.BaseUrl)
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -134,7 +138,7 @@ func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload, baseUrl strin
 	}
 	request.Header = http.Header{
 		// TODO: Pass in token as parameter
-		"Authorization": []string{fmt.Sprintf("Token %s", input.I.Token)},
+		"Authorization": []string{fmt.Sprintf("Token %s", requestConfig.Token)},
 		"Content-Type":  []string{"application/json"},
 	}
 	return request, nil

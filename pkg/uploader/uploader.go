@@ -6,7 +6,7 @@ import (
 	"maps"
 )
 
-func RunUploader(dirsPath string, hashFileName string, baseUrl string, dryRun bool) error {
+func RunUploader(dirsPath string, hashFileName string, requestConfig RequestConfig) error {
 	done := make(chan struct{})
 
 	knownHashes := readKnownHashesFromFile(hashFileName)
@@ -17,16 +17,16 @@ func RunUploader(dirsPath string, hashFileName string, baseUrl string, dryRun bo
 
 	dirLoadResultc := loadDataFromDirectories(done, updatedDirsc)
 
-	requestResultc := sendDataLoadRequests(done, dirLoadResultc, baseUrl, dryRun)
+	requestResultc := sendDataLoadRequests(done, dirLoadResultc, requestConfig)
 
-	if err := saveAndDisplayResults(requestResultc, knownHashes, hashFileName, dryRun); err != nil {
+	if err := saveAndDisplayResults(requestResultc, knownHashes, hashFileName, requestConfig); err != nil {
 		return err
 	}
 
 	return <-errc
 }
 
-func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, hashFileName string, dryRun bool) error {
+func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, hashFileName string, requestConfig RequestConfig) error {
 	newHashes := make(map[string][md5.Size]byte)
 	maps.Copy(newHashes, knownHashes)
 	for result := range requestResultc {
@@ -48,8 +48,11 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 		maps.Copy(newHashes, result.ProcessedDir.FileChecksums)
 	}
 
-	if !dryRun {
-		writeKnownHashesToFile(hashFileName, newHashes)
+	if !requestConfig.DryRun {
+		err := writeKnownHashesToFile(hashFileName, newHashes)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

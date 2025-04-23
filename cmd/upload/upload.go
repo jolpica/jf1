@@ -46,7 +46,12 @@ func runUploadCmd(cmd *cobra.Command, args []string) error {
 		dirsPath = args[0]
 	}
 	fmt.Printf("Scanning Dir: %v\n", dirsPath)
-	err := uploader.RunUploader(dirsPath, input.I.Upload.ScannedFile, input.I.Upload.BaseUrl, input.I.Upload.DryRun)
+	requestConfig := uploader.RequestConfig{
+		Token:   input.I.Token,
+		DryRun:  input.I.Upload.DryRun,
+		BaseUrl: input.I.Upload.BaseUrl,
+	}
+	err := uploader.RunUploader(dirsPath, input.I.Upload.ScannedFile, requestConfig)
 
 	fmt.Printf("End of program. err: %v\nTook: %v\n", err, time.Since(start))
 	return err
