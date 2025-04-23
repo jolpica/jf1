@@ -16,16 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/jolpica/jf1/cmd/input"
 	"github.com/jolpica/jf1/cmd/upload"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
-
-var Input Jf1Input
-var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -49,52 +45,12 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(input.InitConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./jf1.toml)")
-
 	rootCmd.AddCommand(upload.NewUploadCmd())
 	rootCmd.AddCommand(stressCmd)
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigType("toml")
-		viper.SetConfigName("jf1.toml")
-	}
-
-	viper.SetEnvPrefix("JF1")
-	viper.AutomaticEnv()
-	viper.BindEnv("token")
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
-
-	err := viper.UnmarshalExact(&Input)
-	cobra.CheckErr(err)
-
-	fmt.Printf("Config: %+v", Input)
-}
-
-type Jf1Input struct {
-	Upload UploadInput
-
-	Token string
-}
-
-type UploadInput struct {
-	BaseUrl     string `mapstructure:"base-url"`
-	DryRun      bool   `mapstructure:"dry-run"`
-	ScannedFile string `mapstructure:"scanned-file"`
 }

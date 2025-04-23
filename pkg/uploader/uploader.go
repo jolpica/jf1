@@ -36,7 +36,7 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 		}
 
 		if result.StatusCode >= 300 {
-			fmt.Printf("FAILURE Request (%v): %+v\n\n", result.StatusCode, result.ResponseData)
+			fmt.Printf("FAILURE %q (%v): %+v\n\n", result.RequestData.Description, result.StatusCode, result.ResponseData)
 			continue
 		}
 

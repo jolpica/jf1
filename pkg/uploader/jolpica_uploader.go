@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sync"
+
+	"github.com/jolpica/jf1/cmd/input"
 )
 
 type RequestResult struct {
@@ -132,7 +133,8 @@ func createJolpicaHttpRequest(payload JolpicaUploadRequestPayload, baseUrl strin
 		return nil, err
 	}
 	request.Header = http.Header{
-		"Authorization": []string{fmt.Sprintf("Token %s", os.Getenv("JOLPICA_TOKEN"))},
+		// TODO: Pass in token as parameter
+		"Authorization": []string{fmt.Sprintf("Token %s", input.I.Token)},
 		"Content-Type":  []string{"application/json"},
 	}
 	return request, nil

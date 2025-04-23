@@ -44,6 +44,7 @@ func loadDataFromDirectories(done <-chan struct{}, changedDirsc <-chan DirWithCh
 			go func(dirWithChanges DirWithChangedFiles) {
 				defer wg.Done()
 				defer func() { <-sem }()
+				fmt.Printf("Found changes: %q\n", dirWithChanges.Path)
 				processedDir, err := processDirectoryFiles(dirWithChanges)
 				select {
 				case dirLoadResultc <- DirectoryLoadResult{Path: dirWithChanges.Path, Result: processedDir, Err: err}:

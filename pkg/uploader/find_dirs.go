@@ -90,7 +90,7 @@ func checkDirForUpdates(done <-chan struct{}, knownHashes map[string][md5.Size]b
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !strings.HasSuffix(d.Name(), ".yml") {
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".json") {
 			// Only Walk yml files
 			return nil
 		}

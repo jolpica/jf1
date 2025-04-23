@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jolpica/jf1/cmd/input"
 	"github.com/jolpica/jf1/pkg/uploader"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,7 +46,7 @@ func runUploadCmd(cmd *cobra.Command, args []string) error {
 		dirsPath = args[0]
 	}
 	fmt.Printf("Scanning Dir: %v\n", dirsPath)
-	err := uploader.RunUploader(dirsPath, viper.GetString("upload.scanned-file"), viper.GetString("upload.base-url"), viper.GetBool("upload.dry-run"))
+	err := uploader.RunUploader(dirsPath, input.I.Upload.ScannedFile, input.I.Upload.BaseUrl, input.I.Upload.DryRun)
 
 	fmt.Printf("End of program. err: %v\nTook: %v\n", err, time.Since(start))
 	return err
