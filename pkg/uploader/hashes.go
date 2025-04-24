@@ -39,8 +39,5 @@ func writeKnownHashesToFile(fileName string, knownHashes map[string][md5.Size]by
 		return fmt.Errorf("failure encoding gob: %v", err)
 	}
 
-	if err := file.Close(); err != nil {
-		return fmt.Errorf("failure to close file: %v", err)
-	}
 	return nil
 }

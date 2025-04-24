@@ -94,7 +94,10 @@ func checkDirForUpdates(done <-chan struct{}, knownHashes map[string][md5.Size]b
 			// Only Walk yml files
 			return nil
 		}
-		contents, _ := os.ReadFile(path)
+		contents, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
 		checksum := md5.Sum(contents)
 
 		if checksum != knownHashes[path] {

@@ -16,26 +16,38 @@ type Jf1Secret struct {
 }
 
 type Jf1Input struct {
+	Debug bool `mapstructure:"debug"`
+
 	Upload uploader.UploadConfig
 	Secret Jf1Secret
 }
 
-// initConfig reads in config file and ENV variables if set.
+// InitConfig reads in config file and ENV variables if set.
 func InitConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigType("toml")
 	viper.SetConfigName("jf1.toml")
 
 	viper.SetEnvPrefix("JF1")
-	viper.BindEnv("secret.token")
+	viper.AutomaticEnv()
+	viper.BindEnv("secret.token", "JF1_SECRET_TOKEN")
 
-	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	}
+
+	// Prevent secret.token from being set in config
+	if viper.InConfig("secret.token") {
+		fmt.Fprintln(os.Stderr, "Error: secret.token must not be set in config file. Use env var JF1_SECRET_TOKEN.")
+		os.Exit(1)
 	}
 
 	err := viper.UnmarshalExact(&I)
 	cobra.CheckErr(err)
 
-	fmt.Printf("Config: %+v\n", I)
+	if I.Debug {
+		masked := I
+		masked.Secret = Jf1Secret{}
+		fmt.Printf("Config: %+v\n", masked)
+	}
 }
