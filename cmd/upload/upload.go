@@ -36,6 +36,9 @@ to quickly create a Cobra application.`,
 	cmd.Flags().StringP("scanned-file", "s", "scanned.gob", "file name to save previously checked directories")
 	viper.BindPFlag("upload.scanned-file", cmd.Flags().Lookup("scanned-file"))
 
+	cmd.Flags().Bool("only-update-scanned", false, "only update the contexts of scanned-file, do not make any requests")
+	viper.BindPFlag("upload.only-update-scanned", cmd.Flags().Lookup("only-update-scanned"))
+
 	cmd.Flags().IntP("max-concurrent-requests", "m", 3, "maximum number of requests to jolpica-f1 at once")
 	viper.BindPFlag("upload.max-concurrent-requests", cmd.Flags().Lookup("max-concurrent-requests"))
 

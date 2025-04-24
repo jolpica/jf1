@@ -40,6 +40,17 @@ func sendDataLoadRequests(ctx context.Context, dirLoadResultc <-chan DirectoryLo
 					}
 					return
 				}
+				if config.OnlyUpdateScanned {
+					// Skip making requests and pass on the result directly
+					requestResultc <- RequestResult{
+						StatusCode:   0,
+						RequestData:  JolpicaUploadRequestPayload{},
+						ResponseData: JolpicaUploadResponsePayload{},
+						ProcessedDir: *result.Result,
+						Err:          nil,
+					}
+					return
+				}
 				makeDataLoadRequest(ctx, requestResultc, reqSem, client, result.Result, config, token)
 			}(result)
 		}

@@ -10,8 +10,10 @@ import (
 type UploadConfig struct {
 	BaseUrl               string `mapstructure:"base-url"`
 	DryRun                bool   `mapstructure:"dry-run"`
-	ScannedFile           string `mapstructure:"scanned-file"`
 	MaxConcurrentRequests int    `mapstructure:"max-concurrent-requests"`
+
+	ScannedFile       string `mapstructure:"scanned-file"`
+	OnlyUpdateScanned bool   `mapstructure:"only-update-scanned"`
 }
 
 func RunUploader(dirsPath string, config UploadConfig, token string) error {
@@ -50,8 +52,10 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 
 		requestData := result.RequestData
 		responseData := result.ResponseData
-		fmt.Printf("SUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
-		fmt.Printf("Total: %v, Created: %v, Updated %v\n\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
+		if !config.OnlyUpdateScanned {
+			fmt.Printf("SUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
+			fmt.Printf("Total: %v, Created: %v, Updated %v\n\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
+		}
 
 		maps.Copy(newHashes, result.ProcessedDir.FileChecksums)
 	}
@@ -61,6 +65,11 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 		if err != nil {
 			return err
 		}
+		if config.OnlyUpdateScanned {
+			fmt.Printf("Successfully updated %s with the current directory contents\n", config.ScannedFile)
+		}
+	} else {
+		fmt.Println("Skipped saving scanned files as dry-run is enabled")
 	}
 	return nil
 }
