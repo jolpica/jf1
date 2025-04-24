@@ -1,6 +1,7 @@
 package uploader
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 	"maps"
@@ -14,17 +15,17 @@ type UploadConfig struct {
 }
 
 func RunUploader(dirsPath string, config UploadConfig, token string) error {
-	done := make(chan struct{})
+	ctx := context.Background()
 
 	knownHashes := readKnownHashesFromFile(config.ScannedFile)
 
-	dirsc, errc := getDirs(done, dirsPath)
+	dirsc, errc := getDirs(ctx, dirsPath)
 
-	updatedDirsc := findUpdatedDirs(done, knownHashes, dirsc)
+	updatedDirsc := findUpdatedDirs(ctx, knownHashes, dirsc)
 
-	dirLoadResultc := loadDataFromDirectories(done, updatedDirsc)
+	dirLoadResultc := loadDataFromDirectories(ctx, updatedDirsc)
 
-	requestResultc := sendDataLoadRequests(done, dirLoadResultc, config, token)
+	requestResultc := sendDataLoadRequests(ctx, dirLoadResultc, config, token)
 
 	if err := saveAndDisplayResults(requestResultc, knownHashes, config); err != nil {
 		return err

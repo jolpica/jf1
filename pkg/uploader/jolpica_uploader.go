@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,7 +19,7 @@ type RequestResult struct {
 	Err error
 }
 
-func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryLoadResult, config UploadConfig, token string) <-chan RequestResult {
+func sendDataLoadRequests(ctx context.Context, dirLoadResultc <-chan DirectoryLoadResult, config UploadConfig, token string) <-chan RequestResult {
 	requestResultc := make(chan RequestResult, 5)
 	client := &http.Client{}
 
@@ -35,11 +36,11 @@ func sendDataLoadRequests(done <-chan struct{}, dirLoadResultc <-chan DirectoryL
 				if result.Err != nil {
 					select {
 					case requestResultc <- RequestResult{Err: result.Err}:
-					case <-done:
+					case <-ctx.Done():
 					}
 					return
 				}
-				makeDataLoadRequest(done, requestResultc, reqSem, client, result.Result, config, token)
+				makeDataLoadRequest(ctx, requestResultc, reqSem, client, result.Result, config, token)
 			}(result)
 		}
 	}()
@@ -67,12 +68,12 @@ type JolpicaUploadResponsePerModelPayload struct {
 	Updated      []int `json:"updated"`
 }
 
-func makeDataLoadRequest(done <-chan struct{}, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, config UploadConfig, token string) {
+func makeDataLoadRequest(ctx context.Context, requestResultc chan RequestResult, reqSem chan struct{}, client *http.Client, processedDir *ProcessedDirectory, config UploadConfig, token string) {
 	var requestResult RequestResult
 	defer func() {
 		select {
 		case requestResultc <- requestResult:
-		case <-done:
+		case <-ctx.Done():
 		}
 	}()
 
