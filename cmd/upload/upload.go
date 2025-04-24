@@ -36,6 +36,9 @@ to quickly create a Cobra application.`,
 	cmd.Flags().StringP("scanned-file", "s", "scanned.gob", "file name to save previously checked directories")
 	viper.BindPFlag("upload.scanned-file", cmd.Flags().Lookup("scanned-file"))
 
+	cmd.Flags().IntP("max-concurrent-requests", "m", 3, "maximum number of requests to jolpica-f1 at once")
+	viper.BindPFlag("upload.max-concurrent-requests", cmd.Flags().Lookup("max-concurrent-requests"))
+
 	return cmd
 }
 
@@ -46,12 +49,7 @@ func runUploadCmd(cmd *cobra.Command, args []string) error {
 		dirsPath = args[0]
 	}
 	fmt.Printf("Scanning Dir: %v\n", dirsPath)
-	requestConfig := uploader.RequestConfig{
-		Token:   input.I.Token,
-		DryRun:  input.I.Upload.DryRun,
-		BaseUrl: input.I.Upload.BaseUrl,
-	}
-	err := uploader.RunUploader(dirsPath, input.I.Upload.ScannedFile, requestConfig)
+	err := uploader.RunUploader(dirsPath, input.I.Upload, input.I.Secret.Token)
 
 	fmt.Printf("End of program. err: %v\nTook: %v\n", err, time.Since(start))
 	return err

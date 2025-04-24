@@ -6,10 +6,17 @@ import (
 	"maps"
 )
 
-func RunUploader(dirsPath string, hashFileName string, requestConfig RequestConfig) error {
+type UploadConfig struct {
+	BaseUrl               string `mapstructure:"base-url"`
+	DryRun                bool   `mapstructure:"dry-run"`
+	ScannedFile           string `mapstructure:"scanned-file"`
+	MaxConcurrentRequests int    `mapstructure:"max-concurrent-requests"`
+}
+
+func RunUploader(dirsPath string, config UploadConfig, token string) error {
 	done := make(chan struct{})
 
-	knownHashes := readKnownHashesFromFile(hashFileName)
+	knownHashes := readKnownHashesFromFile(config.ScannedFile)
 
 	dirsc, errc := getDirs(done, dirsPath)
 
@@ -17,16 +24,16 @@ func RunUploader(dirsPath string, hashFileName string, requestConfig RequestConf
 
 	dirLoadResultc := loadDataFromDirectories(done, updatedDirsc)
 
-	requestResultc := sendDataLoadRequests(done, dirLoadResultc, requestConfig)
+	requestResultc := sendDataLoadRequests(done, dirLoadResultc, config, token)
 
-	if err := saveAndDisplayResults(requestResultc, knownHashes, hashFileName, requestConfig); err != nil {
+	if err := saveAndDisplayResults(requestResultc, knownHashes, config); err != nil {
 		return err
 	}
 
 	return <-errc
 }
 
-func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, hashFileName string, requestConfig RequestConfig) error {
+func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, config UploadConfig) error {
 	newHashes := make(map[string][md5.Size]byte)
 	maps.Copy(newHashes, knownHashes)
 	for result := range requestResultc {
@@ -48,8 +55,8 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 		maps.Copy(newHashes, result.ProcessedDir.FileChecksums)
 	}
 
-	if !requestConfig.DryRun {
-		err := writeKnownHashesToFile(hashFileName, newHashes)
+	if !config.DryRun {
+		err := writeKnownHashesToFile(config.ScannedFile, newHashes)
 		if err != nil {
 			return err
 		}
