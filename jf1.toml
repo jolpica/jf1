@@ -1,4 +1,4 @@
-# verbose = true
+verbose = true
 
 [upload]
 dry-run = true

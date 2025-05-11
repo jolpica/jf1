@@ -37,6 +37,9 @@ func Execute() {
 }
 
 func init() {
+
+	rootCmd.PersistentFlags().StringVar(&input.ConfigFile, "config", "", "override configuration file to use")
+
 	cobra.OnInitialize(input.InitConfig)
 
 	// Here you will define your flags and configuration settings.

@@ -11,6 +11,8 @@ import (
 
 var I Jf1Input
 
+var ConfigFile string
+
 type Jf1Secret struct {
 	Token string
 }
@@ -25,9 +27,13 @@ type Jf1Input struct {
 
 // InitConfig reads in config file and ENV variables if set.
 func InitConfig() {
-	viper.AddConfigPath(".")
-	viper.SetConfigType("toml")
-	viper.SetConfigName("jf1.toml")
+	if ConfigFile != "" {
+		viper.SetConfigFile(ConfigFile)
+	} else {
+		viper.AddConfigPath(".")
+		viper.SetConfigType("toml")
+		viper.SetConfigName("jf1.toml")
+	}
 
 	viper.SetEnvPrefix("JF1")
 	viper.AutomaticEnv()
