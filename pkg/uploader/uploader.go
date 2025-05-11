@@ -42,24 +42,25 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 	maps.Copy(newHashes, knownHashes)
 	for result := range requestResultc {
 		if result.Err != nil {
-			fmt.Printf("Failed to make a request for %s: %v\n\n", result.ProcessedDir.SourceDirPath, result.Err)
+			fmt.Printf("\nFailed to make a request for %s: %v\n", result.ProcessedDir.SourceDirPath, result.Err)
 			continue
 		}
 
 		if result.StatusCode >= 300 {
-			fmt.Printf("FAILURE %q (%v): %+v\n\n", result.RequestData.Description, result.StatusCode, result.ResponseData)
+			fmt.Printf("\nFAILURE (%v) %q: %+v\n", result.StatusCode, result.RequestData.Description, result.ResponseData.Errors)
 			continue
 		}
 
 		requestData := result.RequestData
 		responseData := result.ResponseData
 		if !config.OnlyUpdateScanned {
-			fmt.Printf("SUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
-			fmt.Printf("Total: %v, Created: %v, Updated %v\n\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
+			fmt.Printf("\nSUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
+			fmt.Printf("Total: %v, Created: %v, Updated %v\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
 		}
 
 		maps.Copy(newHashes, result.ProcessedDir.FileChecksums)
 	}
+	fmt.Println()
 
 	if !config.DryRun {
 		err := writeKnownHashesToFile(config.ScannedFile, newHashes)
