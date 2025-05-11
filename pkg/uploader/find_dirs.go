@@ -28,29 +28,37 @@ type checkedDirectory struct {
 }
 
 // Return a channel of top level directories in the given path
-func getDirs(ctx context.Context, rootPath string) (<-chan checkedDirectory, chan error) {
+func getDirs(ctx context.Context, rootPaths []string) (<-chan checkedDirectory, chan error) {
 	dirsc := make(chan checkedDirectory)
 	errc := make(chan error, 1)
 
 	go func() {
 		defer close(dirsc)
-		errc <- filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if !d.IsDir() || path == rootPath {
-				// Only Walk directories
-				return nil
-			}
+		for _, rootPath := range rootPaths {
 
-			select {
-			case dirsc <- checkedDirectory{Path: path, DirEntry: d}:
-				// Don't search nested directories
-				return fs.SkipDir
-			case <-ctx.Done():
-				return errors.New("walk cancelled")
+			err := filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if !d.IsDir() || path == rootPath {
+					// Only Walk directories
+					return nil
+				}
+
+				select {
+				case dirsc <- checkedDirectory{Path: path, DirEntry: d}:
+					// Don't search nested directories
+					return fs.SkipDir
+				case <-ctx.Done():
+					return errors.New("walk cancelled")
+				}
+			})
+			if err != nil {
+				errc <- err
+				return
 			}
-		})
+		}
+		errc <- nil
 	}()
 
 	return dirsc, errc

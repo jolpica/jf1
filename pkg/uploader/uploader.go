@@ -17,12 +17,12 @@ type UploadConfig struct {
 	OnlyUpdateScanned bool   `mapstructure:"only-update-scanned"`
 }
 
-func RunUploader(dirsPath string, config UploadConfig, token string) error {
+func RunUploader(dirPaths []string, config UploadConfig, token string) error {
 	ctx := context.Background()
 
 	knownHashes := readKnownHashesFromFile(config.ScannedFile)
 
-	dirsc, errc := getDirs(ctx, dirsPath)
+	dirsc, errc := getDirs(ctx, dirPaths)
 
 	updatedDirsc := findUpdatedDirs(ctx, knownHashes, dirsc)
 

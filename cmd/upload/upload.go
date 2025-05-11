@@ -24,9 +24,8 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 		RunE: runUploadCmd,
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.MinimumNArgs(1),
 	}
-
 
 	cmd.Flags().Bool("dry-run", false, "run command in dry-run mode")
 	viper.BindPFlag("upload.dry-run", cmd.Flags().Lookup("dry-run"))
@@ -45,13 +44,11 @@ to quickly create a Cobra application.`,
 
 func runUploadCmd(cmd *cobra.Command, args []string) error {
 	start := time.Now()
-	dirsPath := "."
-	if len(args) >= 1 {
-		dirsPath = args[0]
-	}
-	fmt.Printf("Scanning Dir: %v\n", dirsPath)
-	err := uploader.RunUploader(dirsPath, input.I.Upload, input.I.Secret.Token)
+	fmt.Printf("Scanning Dirs: %v\n", args)
+	err := uploader.RunUploader(args, input.I.Upload, input.I.Secret.Token)
 
-	fmt.Printf("End of program. err: %v\nTook: %v\n", err, time.Since(start))
+	if input.I.Upload.Verbose {
+		fmt.Printf("End of program.\nerr: %v\nTook: %v\n", err, time.Since(start))
+	}
 	return err
 }
