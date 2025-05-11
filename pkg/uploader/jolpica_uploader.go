@@ -40,7 +40,7 @@ func sendDataLoadRequests(ctx context.Context, dirLoadResultc <-chan DirectoryLo
 					}
 					return
 				}
-				if config.OnlyUpdateScanned {
+				if config.OnlyUpdateUploaded {
 					// Skip making requests and pass on the result directly
 					requestResultc <- RequestResult{
 						StatusCode:   0,
