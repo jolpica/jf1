@@ -27,8 +27,6 @@ to quickly create a Cobra application.`,
 		Args: cobra.MaximumNArgs(1),
 	}
 
-	cmd.Flags().StringP("base-url", "u", "https://api.jolpi.ca", "base url for jolpica-f1 api requests")
-	viper.BindPFlag("upload.base-url", cmd.Flags().Lookup("base-url"))
 
 	cmd.Flags().Bool("dry-run", false, "run command in dry-run mode")
 	viper.BindPFlag("upload.dry-run", cmd.Flags().Lookup("dry-run"))

@@ -24,7 +24,7 @@ func (data *ProcessedDirectory) Description() string {
 	if data == nil {
 		return "<nil ImportData>"
 	}
-	return fmt.Sprintf("%s (%d files, %d data entries)", data.SourceDirPath, len(data.FileChecksums), len(data.Data))
+	return fmt.Sprintf("%s (%d updated files, %d data entries)", data.SourceDirPath, len(data.FileChecksums), len(data.Data))
 }
 
 func loadDataFromDirectories(ctx context.Context, changedDirsc <-chan DirWithChangedFiles) <-chan DirectoryLoadResult {

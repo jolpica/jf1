@@ -21,6 +21,7 @@ import (
 	"github.com/jolpica/jf1/cmd/input"
 	"github.com/jolpica/jf1/cmd/upload"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var rootCmd = &cobra.Command{
@@ -41,7 +42,11 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().Bool("--debug", false, "run the tool in debug mode")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "increase the verbosity of output")
+	viper.BindPFlag("upload.verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+
+	rootCmd.PersistentFlags().StringP("base-url", "u", "https://localhost:8000", "base url for jolpica-f1 api requests")
+	viper.BindPFlag("upload.base-url", rootCmd.PersistentFlags().Lookup("base-url"))
 
 	rootCmd.AddCommand(upload.NewUploadCmd())
 	rootCmd.AddCommand(stressCmd)

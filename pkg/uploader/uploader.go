@@ -8,6 +8,7 @@ import (
 )
 
 type UploadConfig struct {
+	Verbose               bool
 	BaseUrl               string `mapstructure:"base-url"`
 	DryRun                bool   `mapstructure:"dry-run"`
 	MaxConcurrentRequests int    `mapstructure:"max-concurrent-requests"`

@@ -92,7 +92,6 @@ func checkDirForUpdates(ctx context.Context, knownHashes map[string][md5.Size]by
 			return err
 		}
 		if d.IsDir() || !strings.HasSuffix(d.Name(), ".json") {
-			// Only Walk yml files
 			return nil
 		}
 		contents, err := os.ReadFile(path)

@@ -16,7 +16,8 @@ type Jf1Secret struct {
 }
 
 type Jf1Input struct {
-	Debug bool `mapstructure:"debug"`
+	Verbose bool `mapstructure:"verbose"`
+	Test    string
 
 	Upload uploader.UploadConfig
 	Secret Jf1Secret
@@ -45,7 +46,7 @@ func InitConfig() {
 	err := viper.UnmarshalExact(&I)
 	cobra.CheckErr(err)
 
-	if I.Debug {
+	if I.Verbose {
 		masked := I
 		masked.Secret = Jf1Secret{}
 		fmt.Printf("Config: %+v\n", masked)
