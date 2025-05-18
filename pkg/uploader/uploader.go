@@ -40,6 +40,7 @@ func RunUploader(dirPaths []string, config UploadConfig, token string) error {
 func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, config UploadConfig) error {
 	newHashes := make(map[string][md5.Size]byte)
 	maps.Copy(newHashes, knownHashes)
+	successfulUpload := false
 	for result := range requestResultc {
 		if result.Err != nil {
 			fmt.Printf("\nFailed to make a request for %s: %v\n", result.ProcessedDir.SourceDirPath, result.Err)
@@ -53,6 +54,7 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 
 		requestData := result.RequestData
 		responseData := result.ResponseData
+		successfulUpload = true
 		if !config.OnlyUpdateUploaded {
 			fmt.Printf("\nSUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
 			fmt.Printf("Total: %v, Created: %v, Updated %v\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
@@ -62,16 +64,18 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 	}
 	fmt.Println()
 
-	if !config.DryRun {
-		err := writeKnownHashesToFile(config.UploadedFile, newHashes)
-		if err != nil {
-			return err
-		}
-		if config.OnlyUpdateUploaded {
-			fmt.Printf("Successfully updated %s with the current directory contents\n", config.UploadedFile)
-		}
-	} else {
+	if config.DryRun {
 		fmt.Println("Skipped saving scanned files as dry-run is enabled")
+		return nil
 	}
+	if !successfulUpload && !config.OnlyUpdateUploaded {
+		fmt.Println("No files were uploaded, skipping saving to file")
+		return nil
+	}
+	err := writeKnownHashesToFile(config.UploadedFile, newHashes)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Successfully updated %s with the current directory contents\n", config.UploadedFile)
 	return nil
 }
