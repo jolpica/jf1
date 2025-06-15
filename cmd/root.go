@@ -25,8 +25,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "jf1",
-	Short: "CLI tools for the jolpica-f1 project",
+	Use:          "jf1",
+	Short:        "CLI tools for the jolpica-f1 project",
+	SilenceUsage: true,
 }
 
 func Execute() {

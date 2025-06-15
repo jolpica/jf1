@@ -3,6 +3,7 @@ package uploader
 import (
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"maps"
 )
@@ -40,9 +41,11 @@ func RunUploader(dirPaths []string, config UploadConfig, token string) error {
 func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[string][md5.Size]byte, config UploadConfig) error {
 	newHashes := make(map[string][md5.Size]byte)
 	maps.Copy(newHashes, knownHashes)
-	successfulUpload := false
+	someSuccessfulUploads := false
+	someFailedUploads := false
 	for result := range requestResultc {
 		if result.Err != nil {
+			someFailedUploads = true
 			fmt.Printf("\nFailed to make a request for %s: %v\n", result.ProcessedDir.SourceDirPath, result.Err)
 			continue
 		}
@@ -54,7 +57,7 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 
 		requestData := result.RequestData
 		responseData := result.ResponseData
-		successfulUpload = true
+		someSuccessfulUploads = true
 		if !config.OnlyUpdateUploaded {
 			fmt.Printf("\nSUCCESS (dry_run:%v) uploading %v\n", requestData.DryRun, requestData.Description)
 			fmt.Printf("Total: %v, Created: %v, Updated %v\n", responseData.TotalCount, responseData.CreatedCount, responseData.UpdatedCount)
@@ -66,16 +69,16 @@ func saveAndDisplayResults(requestResultc <-chan RequestResult, knownHashes map[
 
 	if config.DryRun {
 		fmt.Println("Skipped saving scanned files as dry-run is enabled")
-		return nil
-	}
-	if !successfulUpload && !config.OnlyUpdateUploaded {
+	} else if !someSuccessfulUploads && !config.OnlyUpdateUploaded {
 		fmt.Println("No files were uploaded, skipping saving to file")
-		return nil
+	} else if err := writeKnownHashesToFile(config.UploadedFile, newHashes); err != nil {
+		return fmt.Errorf("failed to write known hashes to file: %w", err)
+	} else {
+		fmt.Printf("Successfully updated %s with successful request contents\n", config.UploadedFile)
 	}
-	err := writeKnownHashesToFile(config.UploadedFile, newHashes)
-	if err != nil {
-		return err
+
+	if someFailedUploads {
+		return errors.New("some uploads failed")
 	}
-	fmt.Printf("Successfully updated %s with the current directory contents\n", config.UploadedFile)
 	return nil
 }
